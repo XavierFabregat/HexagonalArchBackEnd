@@ -107,4 +107,13 @@ export class Task {
       updatedAt: this._updatedAt,
     };
   }
+
+  toPersistence() {
+    return {
+      id: this._id.toString(),
+      title: this._title,
+      description: this._description,
+      status: this._status,
+    };
+  }
 }
