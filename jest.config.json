@@ -17,7 +17,10 @@
     "!src/**/*.d.ts",
     "!src/main.ts",
     "!src/**/*.test.ts",
-    "!src/__tests__/**/*.ts"
+    "!src/__tests__/**/*.ts",
+    "!src/infrastructure/repositories/drizzle/schema.ts",
+    "!src/infrastructure/repositories/sequelize/models/Task.ts",
+    "!src/loadEnv.ts"
   ],
   "coverageDirectory": "coverage",
   "coverageReporters": ["text", "lcov", "html"]

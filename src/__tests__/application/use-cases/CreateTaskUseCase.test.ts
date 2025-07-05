@@ -23,7 +23,7 @@ describe('CreateTaskUseCase', () => {
       const result = await useCase.execute(command);
 
       expect(result.title.getValue()).toBe('Buy groceries');
-      expect(result.description).toBe('Milk, eggs, bread');
+      expect(result.description.getValue()).toBe('Milk, eggs, bread');
       expect(result.status).toBe(TaskStatusEnum.PENDING);
     });
 
@@ -38,7 +38,9 @@ describe('CreateTaskUseCase', () => {
       expect(mockRepository.getTaskCount()).toBe(1);
       expect(mockRepository.getTasks()[0].id.getValue()).toBeDefined();
       expect(mockRepository.getTasks()[0].title.getValue()).toBe('Test Task');
-      expect(mockRepository.getTasks()[0].description).toBe('Test Description');
+      expect(mockRepository.getTasks()[0].description.getValue()).toBe(
+        'Test Description'
+      );
       expect(mockRepository.getTasks()[0].status).toBe(TaskStatusEnum.PENDING);
     });
 

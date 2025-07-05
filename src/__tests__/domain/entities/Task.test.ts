@@ -3,16 +3,18 @@ import { TaskStatusEnum } from '@domain/value-objects/TaskStatus';
 import { TaskId } from '@domain/value-objects/TaskId';
 import { v4 as uuidv4 } from 'uuid';
 import { TaskTitle } from '@domain/value-objects/TaskTitle';
+import { TaskDescription } from '../../../domain/value-objects/TaskDescription';
 
 describe('Task Entity', () => {
   let validTaskId: TaskId;
   let anotherTaskId: TaskId;
   let validTaskTitle: TaskTitle;
-
+  let validTaskDescription: TaskDescription;
   beforeEach(() => {
     validTaskId = TaskId.from(uuidv4());
     anotherTaskId = TaskId.from(uuidv4());
     validTaskTitle = TaskTitle.create('Buy groceries');
+    validTaskDescription = TaskDescription.create('Milk, eggs, bread');
   });
 
   describe('Task Creation', () => {
@@ -20,12 +22,14 @@ describe('Task Entity', () => {
       it('should create a task with valid parameters', () => {
         const task = Task.create(
           validTaskTitle,
-          'Milk, eggs, bread',
+          validTaskDescription,
           validTaskId
         );
 
         expect(task.title).toBe(validTaskTitle);
-        expect(task.description).toBe('Milk, eggs, bread');
+        expect(task.description.getValue()).toBe(
+          validTaskDescription.getValue()
+        );
         expect(task.status).toBe(TaskStatusEnum.PENDING);
         expect(task.id).toBe(validTaskId);
         expect(task.createdAt).toBeInstanceOf(Date);
@@ -34,10 +38,14 @@ describe('Task Entity', () => {
       });
 
       it('should create tasks with different IDs', () => {
-        const task1 = Task.create(validTaskTitle, 'Description 1', validTaskId);
+        const task1 = Task.create(
+          validTaskTitle,
+          validTaskDescription,
+          validTaskId
+        );
         const task2 = Task.create(
           validTaskTitle,
-          'Description 2',
+          validTaskDescription,
           anotherTaskId
         );
 
@@ -49,7 +57,7 @@ describe('Task Entity', () => {
         const beforeCreation = new Date();
         const task = Task.create(
           validTaskTitle,
-          'Test Description',
+          validTaskDescription,
           validTaskId
         );
         const afterCreation = new Date();
@@ -74,7 +82,7 @@ describe('Task Entity', () => {
       const task = Task.fromPersistence({
         id: taskId,
         title: validTaskTitle.getValue(),
-        description: 'Persisted Description',
+        description: validTaskDescription.getValue(),
         status: TaskStatusEnum.IN_PROGRESS,
         createdAt,
         updatedAt,
@@ -82,7 +90,7 @@ describe('Task Entity', () => {
 
       expect(task.id.getValue()).toBe(taskId);
       expect(task.title.getValue()).toBe(validTaskTitle.getValue());
-      expect(task.description).toBe('Persisted Description');
+      expect(task.description.getValue()).toBe(validTaskDescription.getValue());
       expect(task.status).toBe(TaskStatusEnum.IN_PROGRESS);
       expect(task.createdAt).toBe(createdAt);
       expect(task.updatedAt).toBe(updatedAt);
@@ -118,11 +126,26 @@ describe('Task Entity', () => {
     });
   });
 
+  describe('Task Persistence', () => {
+    it('should persist task correctly', () => {
+      const task = Task.create(
+        validTaskTitle,
+        validTaskDescription,
+        validTaskId
+      );
+      const persistence = task.toPersistence();
+      expect(persistence.title).toBe(validTaskTitle.getValue());
+      expect(persistence.description).toBe(validTaskDescription.getValue());
+      expect(persistence.status).toBe(TaskStatusEnum.PENDING);
+      expect(persistence.id).toBe(validTaskId.getValue());
+    });
+  });
+
   describe('Task Title Updates', () => {
     let task: Task;
 
     beforeEach(() => {
-      task = Task.create(validTaskTitle, 'Original Description', validTaskId);
+      task = Task.create(validTaskTitle, validTaskDescription, validTaskId);
     });
 
     it('should update title successfully', () => {
@@ -186,7 +209,7 @@ describe('Task Entity', () => {
     let task: Task;
 
     beforeEach(() => {
-      task = Task.create(validTaskTitle, 'Original Description', validTaskId);
+      task = Task.create(validTaskTitle, validTaskDescription, validTaskId);
     });
 
     it('should update description successfully', () => {
@@ -195,9 +218,10 @@ describe('Task Entity', () => {
       jest.useFakeTimers();
       jest.setSystemTime(originalUpdatedAt.getTime() + 1000);
 
-      task.updateDescription('New Description');
+      const newDescription = TaskDescription.create('New Description');
+      task.updateDescription(newDescription.getValue());
 
-      expect(task.description).toBe('New Description');
+      expect(task.description.getValue()).toBe(newDescription.getValue());
       expect(task.updatedAt.getTime()).toBeGreaterThan(
         originalUpdatedAt.getTime()
       );
@@ -206,18 +230,21 @@ describe('Task Entity', () => {
     });
 
     it('should trim whitespace when updating description', () => {
-      task.updateDescription('  Trimmed Description  ');
-      expect(task.description).toBe('Trimmed Description');
+      const newDescription = TaskDescription.create('  Trimmed Description  ');
+      task.updateDescription(newDescription.getValue());
+      expect(task.description.getValue()).toBe(newDescription.getValue());
     });
 
-    it('should allow empty description when updating', () => {
-      task.updateDescription('');
-      expect(task.description).toBe('');
+    it('should not allow empty description when updating', () => {
+      expect(() => task.updateDescription('')).toThrow(
+        'Description is required'
+      );
     });
 
-    it('should allow description with only whitespace (trimmed to empty)', () => {
-      task.updateDescription('   ');
-      expect(task.description).toBe('');
+    it('should not allow description with only whitespace (trimmed to empty)', () => {
+      expect(() => task.updateDescription('   ')).toThrow(
+        'Description is required'
+      );
     });
 
     it('should preserve other fields when updating description', () => {
@@ -239,7 +266,7 @@ describe('Task Entity', () => {
     let task: Task;
 
     beforeEach(() => {
-      task = Task.create(validTaskTitle, 'Test Description', validTaskId);
+      task = Task.create(validTaskTitle, validTaskDescription, validTaskId);
     });
 
     describe('Mark as In Progress', () => {
@@ -392,13 +419,17 @@ describe('Task Entity', () => {
 
   describe('Task Serialization', () => {
     it('should serialize to JSON correctly', () => {
-      const task = Task.create(validTaskTitle, 'Test Description', validTaskId);
+      const task = Task.create(
+        validTaskTitle,
+        validTaskDescription,
+        validTaskId
+      );
       const json = task.toJSON();
 
       expect(json).toEqual({
         id: validTaskId.toString(),
         title: validTaskTitle.getValue(),
-        description: 'Test Description',
+        description: validTaskDescription.getValue(),
         status: TaskStatusEnum.PENDING,
         createdAt: task.createdAt,
         updatedAt: task.updatedAt,
@@ -408,19 +439,19 @@ describe('Task Entity', () => {
     it('should serialize task with all statuses correctly', () => {
       const pendingTask = Task.create(
         validTaskTitle,
-        'Description',
+        validTaskDescription,
         validTaskId
       );
       const inProgressTask = Task.create(
         validTaskTitle,
-        'Description',
+        validTaskDescription,
         anotherTaskId
       );
       inProgressTask.markAsInProgress();
 
       const completedTask = Task.create(
         validTaskTitle,
-        'Description',
+        validTaskDescription,
         TaskId.from(uuidv4())
       );
       completedTask.markAsCompleted();
@@ -433,7 +464,7 @@ describe('Task Entity', () => {
     it('should serialize task with updated fields correctly', () => {
       const task = Task.create(
         validTaskTitle,
-        'Original Description',
+        validTaskDescription,
         validTaskId
       );
 
@@ -462,7 +493,7 @@ describe('Task Entity', () => {
     let task: Task;
 
     beforeEach(() => {
-      task = Task.create(validTaskTitle, 'Test Description', validTaskId);
+      task = Task.create(validTaskTitle, validTaskDescription, validTaskId);
     });
 
     it('should not allow external modification of ID', () => {
@@ -496,7 +527,11 @@ describe('Task Entity', () => {
 
   describe('Task Business Rules', () => {
     it('should enforce title requirement throughout lifecycle', () => {
-      const task = Task.create(validTaskTitle, 'Description', validTaskId);
+      const task = Task.create(
+        validTaskTitle,
+        validTaskDescription,
+        validTaskId
+      );
 
       // Should not allow empty title updates at any status
       expect(() => task.updateTitle('')).toThrow('Title is required');
@@ -511,24 +546,28 @@ describe('Task Entity', () => {
     it('should allow description updates at any status', () => {
       const task = Task.create(
         validTaskTitle,
-        'Original Description',
+        validTaskDescription,
         validTaskId
       );
 
       task.updateDescription('Pending Description');
-      expect(task.description).toBe('Pending Description');
+      expect(task.description.getValue()).toBe('Pending Description');
 
       task.markAsInProgress();
       task.updateDescription('In Progress Description');
-      expect(task.description).toBe('In Progress Description');
+      expect(task.description.getValue()).toBe('In Progress Description');
 
       task.markAsCompleted();
       task.updateDescription('Completed Description');
-      expect(task.description).toBe('Completed Description');
+      expect(task.description.getValue()).toBe('Completed Description');
     });
 
     it('should maintain temporal consistency', () => {
-      const task = Task.create(validTaskTitle, 'Description', validTaskId);
+      const task = Task.create(
+        validTaskTitle,
+        validTaskDescription,
+        validTaskId
+      );
       const createdAt = task.createdAt;
 
       // updatedAt should never be before createdAt

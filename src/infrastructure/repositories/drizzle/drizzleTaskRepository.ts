@@ -74,7 +74,7 @@ export class DrizzleTaskRepository implements TaskRepository {
       .update(tasks)
       .set({
         title: task.title?.getValue(),
-        description: task.description,
+        description: task.description?.getValue(),
         status: task.status as TaskStatusEnum,
       })
       .where(eq(tasks.id, id.getValue()));

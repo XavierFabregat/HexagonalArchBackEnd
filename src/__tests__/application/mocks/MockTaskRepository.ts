@@ -59,7 +59,7 @@ export class MockTaskRepository implements TaskRepository {
       updatedTask.updateTitle(task.title.getValue());
     }
     if (task.description) {
-      updatedTask.updateDescription(task.description);
+      updatedTask.updateDescription(task.description.getValue());
     }
     if (task.status) {
       updatedTask.markAsInProgress();

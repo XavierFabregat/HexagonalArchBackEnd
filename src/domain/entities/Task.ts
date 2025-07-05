@@ -1,24 +1,25 @@
 import { TaskId } from '../value-objects/TaskId';
 import { TaskStatus, TaskStatusEnum } from '../value-objects/TaskStatus';
 import { TaskTitle } from '../value-objects/TaskTitle';
+import { TaskDescription } from '../value-objects/TaskDescription';
 
 export class Task {
   // cannot be called with new
   private constructor(
     private readonly _id: TaskId,
     private _title: TaskTitle,
-    private _description: string,
+    private _description: TaskDescription,
     private _status: TaskStatusEnum,
     private _createdAt: Date,
     private _updatedAt: Date
   ) {}
 
   // this is how we create a task
-  static create(title: TaskTitle, description: string, id: TaskId): Task {
-    if (!description) {
-      throw new Error('Description is required');
-    }
-
+  static create(
+    title: TaskTitle,
+    description: TaskDescription,
+    id: TaskId
+  ): Task {
     const now = new Date();
     return new Task(id, title, description, TaskStatusEnum.PENDING, now, now);
   }
@@ -35,7 +36,7 @@ export class Task {
     return new Task(
       TaskId.from(data.id),
       TaskTitle.create(data.title),
-      data.description,
+      TaskDescription.create(data.description),
       data.status,
       data.createdAt,
       data.updatedAt
@@ -49,7 +50,7 @@ export class Task {
   get title(): TaskTitle {
     return this._title;
   }
-  get description(): string {
+  get description(): TaskDescription {
     return this._description;
   }
   get status(): TaskStatusEnum {
@@ -69,7 +70,7 @@ export class Task {
   }
 
   updateDescription(description: string): void {
-    this._description = description.trim();
+    this._description = TaskDescription.create(description);
     this._updatedAt = new Date();
   }
 
@@ -94,7 +95,7 @@ export class Task {
     return {
       id: this._id.toString(),
       title: this._title.getValue(),
-      description: this._description,
+      description: this._description.getValue(),
       status: this._status,
       createdAt: this._createdAt,
       updatedAt: this._updatedAt,
@@ -105,7 +106,7 @@ export class Task {
     return {
       id: this._id.toString(),
       title: this._title.getValue(),
-      description: this._description,
+      description: this._description.getValue(),
       status: this._status,
     };
   }

@@ -6,19 +6,19 @@ import {
   pgEnum,
   timestamp,
 } from 'drizzle-orm/pg-core';
-import { TaskStatus } from '@domain/entities/Task';
+import { TaskStatusEnum } from '@domain/value-objects/TaskStatus';
 
 export const taskStatus = pgEnum('task_status', [
-  TaskStatus.PENDING,
-  TaskStatus.IN_PROGRESS,
-  TaskStatus.COMPLETED,
+  TaskStatusEnum.PENDING,
+  TaskStatusEnum.IN_PROGRESS,
+  TaskStatusEnum.COMPLETED,
 ]);
 
 export const tasks = pgTable('tasks', {
   id: uuid('id').primaryKey().defaultRandom(),
   title: varchar('title', { length: 255 }).notNull(),
   description: text('description').notNull(),
-  status: taskStatus('status').notNull().default(TaskStatus.PENDING),
+  status: taskStatus('status').notNull().default(TaskStatusEnum.PENDING),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });

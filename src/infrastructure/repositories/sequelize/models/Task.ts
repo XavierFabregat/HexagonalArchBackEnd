@@ -6,7 +6,7 @@ import {
   Table,
   UpdatedAt,
 } from 'sequelize-typescript';
-import { TaskStatus } from '@domain/entities/Task';
+import { TaskStatusEnum } from '@domain/value-objects/TaskStatus';
 import { Task as TaskEntity } from '@domain/entities/Task';
 
 @Table
@@ -32,11 +32,11 @@ export class Task extends Model<TaskEntity, TaskCreationAttributes> {
   description!: string;
 
   @Column({
-    type: DataType.ENUM(...Object.values(TaskStatus)),
+    type: DataType.ENUM(...Object.values(TaskStatusEnum)),
     allowNull: false,
-    defaultValue: TaskStatus.PENDING,
+    defaultValue: TaskStatusEnum.PENDING,
   })
-  status!: TaskStatus;
+  status!: TaskStatusEnum;
 
   @CreatedAt
   createdAt!: Date;
@@ -48,12 +48,12 @@ export class Task extends Model<TaskEntity, TaskCreationAttributes> {
 export interface TaskCreationAttributes {
   title: string;
   description: string;
-  status: TaskStatus;
+  status: TaskStatusEnum;
 }
 
 export interface TaskAttributes {
   id: string;
   title: string;
   description: string;
-  status: TaskStatus;
+  status: TaskStatusEnum;
 }

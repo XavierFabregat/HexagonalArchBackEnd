@@ -19,7 +19,7 @@ export class SequelizeTaskRepository implements TaskRepository {
   async save(task: Task): Promise<void> {
     const taskData = {
       title: task.title.getValue(),
-      description: task.description,
+      description: task.description.getValue(),
       status: task.status as TaskStatusEnum,
     };
 

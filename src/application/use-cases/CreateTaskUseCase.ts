@@ -3,6 +3,7 @@ import { TaskRepository } from '../ports/TaskRepository';
 import { TaskId } from '@domain/value-objects/TaskId';
 import { IdGenerator } from '../ports/IdGenerator';
 import { TaskTitle } from '@domain/value-objects/TaskTitle';
+import { TaskDescription } from '@domain/value-objects/TaskDescription';
 
 export interface CreateTaskCommand {
   title: string;
@@ -19,7 +20,7 @@ export class CreateTaskUseCase {
     // 1. Use domain logic to create the task
     const task = Task.create(
       TaskTitle.create(command.title),
-      command.description,
+      TaskDescription.create(command.description),
       TaskId.from(this.idGenerator.generate())
     );
 

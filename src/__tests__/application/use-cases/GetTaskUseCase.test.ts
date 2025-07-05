@@ -4,6 +4,7 @@ import { MockIdGenerator } from '../mocks/MockIdGenerator';
 import { Task } from '@domain/entities/Task';
 import { TaskId } from '@domain/value-objects/TaskId';
 import { TaskTitle } from '@domain/value-objects/TaskTitle';
+import { TaskDescription } from '@domain/value-objects/TaskDescription';
 
 describe('GetTaskUseCase', () => {
   let useCase: GetTaskUseCase;
@@ -17,7 +18,11 @@ describe('GetTaskUseCase', () => {
     mockIdGenerator = new MockIdGenerator();
     taskId = TaskId.from(mockIdGenerator.generate());
     mockRepository.save(
-      Task.create(TaskTitle.create('Test Task'), 'Test Description', taskId)
+      Task.create(
+        TaskTitle.create('Test Task'),
+        TaskDescription.create('Test Description'),
+        taskId
+      )
     );
   });
 
