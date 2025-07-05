@@ -2,11 +2,11 @@ import './loadEnv';
 import express from 'express';
 import { createTaskRoutes } from '@infrastructure/web/routes/TaskRoutes';
 import { TaskController } from '@infrastructure/web/controllers/TaskController';
-import { UuidV4Generator } from '@infrastructure/adapters/uuidV4Generator';
 import { CreateTaskUseCase } from '@application/use-cases/CreateTaskUseCase';
 import { GetTaskUseCase } from '@application/use-cases/GetTaskUseCase';
 import { GetAllTasksUseCase } from '@application/use-cases/GetAllTasksUseCase';
 import { RepositoryFactory } from '@infrastructure/repositories/RepositoryFactory';
+import { IdGeneratorFactory } from '@infrastructure/adapters/IdGenerators/IdGeneratorFactory';
 
 class Application {
   private app: express.Application;
@@ -47,7 +47,7 @@ class Application {
   private setupDependencies(): void {
     // 1. Create infrastructure layer (Adapters)
     const taskRepository = RepositoryFactory.createTaskRepository('sequelize');
-    const idGenerator = new UuidV4Generator();
+    const idGenerator = IdGeneratorFactory.createIdGenerator('uuid');
 
     // 2. Create application layer (Use Cases)
     const createTaskUseCase = new CreateTaskUseCase(
