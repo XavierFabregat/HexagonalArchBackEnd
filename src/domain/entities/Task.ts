@@ -18,20 +18,13 @@ export class Task {
   ) {}
 
   // this is how we create a task
-  static create(title: string, description: string, id?: string): Task {
+  static create(title: string, description: string, id: TaskId): Task {
     if (!title || !description || !id) {
       throw new Error('Title, description and id are required');
     }
 
     const now = new Date();
-    return new Task(
-      TaskId.from(id),
-      title,
-      description,
-      TaskStatus.PENDING,
-      now,
-      now
-    );
+    return new Task(id, title, description, TaskStatus.PENDING, now, now);
   }
 
   // factory method for recreating a task from a database
