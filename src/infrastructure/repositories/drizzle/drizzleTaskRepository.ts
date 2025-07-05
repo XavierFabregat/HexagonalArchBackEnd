@@ -1,10 +1,12 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { eq } from 'drizzle-orm';
 import postgres from 'postgres';
-import { Task, TaskStatus } from '@domain/entities/Task';
+import { Task } from '@domain/entities/Task';
 import { TaskId } from '@domain/value-objects/TaskId';
 import { TaskRepository } from '@application/ports/TaskRepository';
 import { tasks, TaskRow } from './schema';
+import { TaskStatusEnum } from '@domain/value-objects/TaskStatus';
+import { TaskTitle } from '@domain/value-objects/TaskTitle';
 
 export class DrizzleTaskRepository implements TaskRepository {
   private db: ReturnType<typeof drizzle>;
@@ -71,9 +73,9 @@ export class DrizzleTaskRepository implements TaskRepository {
     await this.db
       .update(tasks)
       .set({
-        title: task.title,
+        title: task.title?.getValue(),
         description: task.description,
-        status: task.status as TaskStatus,
+        status: task.status as TaskStatusEnum,
       })
       .where(eq(tasks.id, id.getValue()));
 
@@ -85,7 +87,7 @@ export class DrizzleTaskRepository implements TaskRepository {
       id: row.id,
       title: row.title,
       description: row.description,
-      status: row.status as TaskStatus,
+      status: row.status as TaskStatusEnum,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     });

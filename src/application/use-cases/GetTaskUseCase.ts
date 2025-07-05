@@ -1,6 +1,6 @@
 import { Task } from '@domain/entities/Task';
 import { TaskRepository } from '@application/ports/TaskRepository';
-import { TaskId } from '../../domain/value-objects/TaskId';
+import { TaskId } from '@domain/value-objects/TaskId';
 
 export interface GetTaskCommand {
   id: string;

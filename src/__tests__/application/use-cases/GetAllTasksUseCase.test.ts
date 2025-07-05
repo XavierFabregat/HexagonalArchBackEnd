@@ -1,8 +1,9 @@
 import { GetAllTasksUseCase } from '@application/use-cases/GetAllTasksUseCase';
 import { MockTaskRepository } from '../mocks/MockTaskRepository';
-import { TaskId } from '../../../domain/value-objects/TaskId';
-import { Task } from '../../../domain/entities/Task';
+import { TaskId } from '@domain/value-objects/TaskId';
+import { Task } from '@domain/entities/Task';
 import { MockIdGenerator } from '../mocks/MockIdGenerator';
+import { TaskTitle } from '@domain/value-objects/TaskTitle';
 
 describe('GetAllTasksUseCase', () => {
   let useCase: GetAllTasksUseCase;
@@ -31,14 +32,14 @@ describe('GetAllTasksUseCase', () => {
     it('should return all tasks', async () => {
       mockRepository.save(
         Task.create(
-          'Test Task',
+          TaskTitle.create('Test Task'),
           'Test Description',
           TaskId.from(mockIdGenerator.generate())
         )
       );
       mockRepository.save(
         Task.create(
-          'Test Task 2',
+          TaskTitle.create('Test Task 2'),
           'Test Description 2',
           TaskId.from(mockIdGenerator.generate())
         )

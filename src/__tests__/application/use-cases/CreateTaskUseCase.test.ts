@@ -1,5 +1,5 @@
 import { CreateTaskUseCase } from '@application/use-cases/CreateTaskUseCase';
-import { TaskStatus } from '@domain/entities/Task';
+import { TaskStatusEnum } from '@domain/value-objects/TaskStatus';
 import { MockTaskRepository } from '../mocks/MockTaskRepository';
 import { v4 as uuidv4 } from 'uuid';
 import { MockIdGenerator } from '../mocks/MockIdGenerator';
@@ -22,9 +22,9 @@ describe('CreateTaskUseCase', () => {
 
       const result = await useCase.execute(command);
 
-      expect(result.title).toBe('Buy groceries');
+      expect(result.title.getValue()).toBe('Buy groceries');
       expect(result.description).toBe('Milk, eggs, bread');
-      expect(result.status).toBe(TaskStatus.PENDING);
+      expect(result.status).toBe(TaskStatusEnum.PENDING);
     });
 
     it('should persist the task through the repository', async () => {
@@ -37,9 +37,9 @@ describe('CreateTaskUseCase', () => {
 
       expect(mockRepository.getTaskCount()).toBe(1);
       expect(mockRepository.getTasks()[0].id.getValue()).toBeDefined();
-      expect(mockRepository.getTasks()[0].title).toBe('Test Task');
+      expect(mockRepository.getTasks()[0].title.getValue()).toBe('Test Task');
       expect(mockRepository.getTasks()[0].description).toBe('Test Description');
-      expect(mockRepository.getTasks()[0].status).toBe(TaskStatus.PENDING);
+      expect(mockRepository.getTasks()[0].status).toBe(TaskStatusEnum.PENDING);
     });
 
     it('should throw an error if the description is empty', async () => {
@@ -49,7 +49,7 @@ describe('CreateTaskUseCase', () => {
       };
 
       await expect(useCase.execute(command)).rejects.toThrow(
-        'Title, description and id are required'
+        'Description is required'
       );
     });
   });
@@ -63,7 +63,7 @@ describe('CreateTaskUseCase', () => {
       };
 
       await expect(useCase.execute(command)).rejects.toThrow(
-        'Title, description and id are required'
+        'Title is required'
       );
       expect(mockRepository.getTaskCount()).toBe(0);
     });
@@ -76,7 +76,7 @@ describe('CreateTaskUseCase', () => {
       };
 
       await expect(useCase.execute(command)).rejects.toThrow(
-        'Title, description and id are required'
+        'Title is required'
       );
       expect(mockRepository.getTaskCount()).toBe(0);
     });

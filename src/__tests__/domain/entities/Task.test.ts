@@ -1,43 +1,45 @@
-import { Task, TaskStatus } from '@domain/entities/Task';
+import { Task } from '@domain/entities/Task';
+import { TaskStatusEnum } from '@domain/value-objects/TaskStatus';
 import { TaskId } from '@domain/value-objects/TaskId';
 import { v4 as uuidv4 } from 'uuid';
+import { TaskTitle } from '@domain/value-objects/TaskTitle';
 
 describe('Task Entity', () => {
   let validTaskId: TaskId;
   let anotherTaskId: TaskId;
+  let validTaskTitle: TaskTitle;
 
   beforeEach(() => {
     validTaskId = TaskId.from(uuidv4());
     anotherTaskId = TaskId.from(uuidv4());
+    validTaskTitle = TaskTitle.create('Buy groceries');
   });
 
   describe('Task Creation', () => {
     describe('Valid Task Creation', () => {
       it('should create a task with valid parameters', () => {
         const task = Task.create(
-          'Buy groceries',
+          validTaskTitle,
           'Milk, eggs, bread',
           validTaskId
         );
 
-        expect(task.title).toBe('Buy groceries');
+        expect(task.title).toBe(validTaskTitle);
         expect(task.description).toBe('Milk, eggs, bread');
-        expect(task.status).toBe(TaskStatus.PENDING);
+        expect(task.status).toBe(TaskStatusEnum.PENDING);
         expect(task.id).toBe(validTaskId);
         expect(task.createdAt).toBeInstanceOf(Date);
         expect(task.updatedAt).toBeInstanceOf(Date);
         expect(task.createdAt.getTime()).toBe(task.updatedAt.getTime());
       });
 
-      it('should not create a task with empty description', () => {
-        expect(() => Task.create('Buy groceries', '', validTaskId)).toThrow(
-          'Title, description and id are required'
-        );
-      });
-
       it('should create tasks with different IDs', () => {
-        const task1 = Task.create('Task 1', 'Description 1', validTaskId);
-        const task2 = Task.create('Task 2', 'Description 2', anotherTaskId);
+        const task1 = Task.create(validTaskTitle, 'Description 1', validTaskId);
+        const task2 = Task.create(
+          validTaskTitle,
+          'Description 2',
+          anotherTaskId
+        );
 
         expect(task1.id).not.toBe(task2.id);
         expect(task1.id.equals(task2.id)).toBe(false);
@@ -45,7 +47,11 @@ describe('Task Entity', () => {
 
       it('should set creation and update time to same moment', () => {
         const beforeCreation = new Date();
-        const task = Task.create('Test Task', 'Test Description', validTaskId);
+        const task = Task.create(
+          validTaskTitle,
+          'Test Description',
+          validTaskId
+        );
         const afterCreation = new Date();
 
         expect(task.createdAt.getTime()).toBeGreaterThanOrEqual(
@@ -55,50 +61,6 @@ describe('Task Entity', () => {
           afterCreation.getTime()
         );
         expect(task.updatedAt.getTime()).toBe(task.createdAt.getTime());
-      });
-    });
-
-    describe('Invalid Task Creation', () => {
-      it('should throw error when title is null', () => {
-        expect(() =>
-          Task.create(null as any, 'Description', validTaskId)
-        ).toThrow('Title, description and id are required');
-      });
-
-      it('should throw error when title is undefined', () => {
-        expect(() =>
-          Task.create(undefined as any, 'Description', validTaskId)
-        ).toThrow('Title, description and id are required');
-      });
-
-      it('should throw error when title is empty string', () => {
-        expect(() => Task.create('', 'Description', validTaskId)).toThrow(
-          'Title, description and id are required'
-        );
-      });
-
-      it('should throw error when description is null', () => {
-        expect(() => Task.create('Title', null as any, validTaskId)).toThrow(
-          'Title, description and id are required'
-        );
-      });
-
-      it('should throw error when description is undefined', () => {
-        expect(() =>
-          Task.create('Title', undefined as any, validTaskId)
-        ).toThrow('Title, description and id are required');
-      });
-
-      it('should throw error when id is null', () => {
-        expect(() => Task.create('Title', 'Description', null as any)).toThrow(
-          'Title, description and id are required'
-        );
-      });
-
-      it('should throw error when id is undefined', () => {
-        expect(() =>
-          Task.create('Title', 'Description', undefined as any)
-        ).toThrow('Title, description and id are required');
       });
     });
   });
@@ -111,17 +73,17 @@ describe('Task Entity', () => {
 
       const task = Task.fromPersistence({
         id: taskId,
-        title: 'Persisted Task',
+        title: validTaskTitle.getValue(),
         description: 'Persisted Description',
-        status: TaskStatus.IN_PROGRESS,
+        status: TaskStatusEnum.IN_PROGRESS,
         createdAt,
         updatedAt,
       });
 
       expect(task.id.getValue()).toBe(taskId);
-      expect(task.title).toBe('Persisted Task');
+      expect(task.title.getValue()).toBe(validTaskTitle.getValue());
       expect(task.description).toBe('Persisted Description');
-      expect(task.status).toBe(TaskStatus.IN_PROGRESS);
+      expect(task.status).toBe(TaskStatusEnum.IN_PROGRESS);
       expect(task.createdAt).toBe(createdAt);
       expect(task.updatedAt).toBe(updatedAt);
     });
@@ -137,22 +99,22 @@ describe('Task Entity', () => {
 
       const pendingTask = Task.fromPersistence({
         ...baseData,
-        status: TaskStatus.PENDING,
+        status: TaskStatusEnum.PENDING,
       });
 
       const inProgressTask = Task.fromPersistence({
         ...baseData,
-        status: TaskStatus.IN_PROGRESS,
+        status: TaskStatusEnum.IN_PROGRESS,
       });
 
       const completedTask = Task.fromPersistence({
         ...baseData,
-        status: TaskStatus.COMPLETED,
+        status: TaskStatusEnum.COMPLETED,
       });
 
-      expect(pendingTask.status).toBe(TaskStatus.PENDING);
-      expect(inProgressTask.status).toBe(TaskStatus.IN_PROGRESS);
-      expect(completedTask.status).toBe(TaskStatus.COMPLETED);
+      expect(pendingTask.status).toBe(TaskStatusEnum.PENDING);
+      expect(inProgressTask.status).toBe(TaskStatusEnum.IN_PROGRESS);
+      expect(completedTask.status).toBe(TaskStatusEnum.COMPLETED);
     });
   });
 
@@ -160,7 +122,7 @@ describe('Task Entity', () => {
     let task: Task;
 
     beforeEach(() => {
-      task = Task.create('Original Title', 'Original Description', validTaskId);
+      task = Task.create(validTaskTitle, 'Original Description', validTaskId);
     });
 
     it('should update title successfully', () => {
@@ -170,9 +132,10 @@ describe('Task Entity', () => {
       jest.useFakeTimers();
       jest.setSystemTime(originalUpdatedAt.getTime() + 1000);
 
-      task.updateTitle('New Title');
+      const newTitle = TaskTitle.create('New Title');
+      task.updateTitle(newTitle.getValue());
 
-      expect(task.title).toBe('New Title');
+      expect(task.title.getValue()).toBe(newTitle.getValue());
       expect(task.updatedAt.getTime()).toBeGreaterThan(
         originalUpdatedAt.getTime()
       );
@@ -181,8 +144,9 @@ describe('Task Entity', () => {
     });
 
     it('should trim whitespace when updating title', () => {
-      task.updateTitle('  Trimmed Title  ');
-      expect(task.title).toBe('Trimmed Title');
+      const newTitle = TaskTitle.create('  Trimmed Title  ');
+      task.updateTitle(newTitle.getValue());
+      expect(task.title.getValue()).toBe(newTitle.getValue());
     });
 
     it('should preserve other fields when updating title', () => {
@@ -200,22 +164,20 @@ describe('Task Entity', () => {
     });
 
     it('should throw error when updating title to empty string', () => {
-      expect(() => task.updateTitle('')).toThrow('Title cannot be empty');
+      expect(() => task.updateTitle('')).toThrow('Title is required');
     });
 
     it('should throw error when updating title to whitespace only', () => {
-      expect(() => task.updateTitle('   ')).toThrow('Title cannot be empty');
+      expect(() => task.updateTitle('   ')).toThrow('Title is required');
     });
 
     it('should throw error when updating title to null', () => {
-      expect(() => task.updateTitle(null as any)).toThrow(
-        'Title cannot be empty'
-      );
+      expect(() => task.updateTitle(null as any)).toThrow('Title is required');
     });
 
     it('should throw error when updating title to undefined', () => {
       expect(() => task.updateTitle(undefined as any)).toThrow(
-        'Title cannot be empty'
+        'Title is required'
       );
     });
   });
@@ -224,7 +186,7 @@ describe('Task Entity', () => {
     let task: Task;
 
     beforeEach(() => {
-      task = Task.create('Test Title', 'Original Description', validTaskId);
+      task = Task.create(validTaskTitle, 'Original Description', validTaskId);
     });
 
     it('should update description successfully', () => {
@@ -277,12 +239,12 @@ describe('Task Entity', () => {
     let task: Task;
 
     beforeEach(() => {
-      task = Task.create('Test Task', 'Test Description', validTaskId);
+      task = Task.create(validTaskTitle, 'Test Description', validTaskId);
     });
 
     describe('Mark as In Progress', () => {
       it('should mark pending task as in progress', () => {
-        expect(task.status).toBe(TaskStatus.PENDING);
+        expect(task.status).toBe(TaskStatusEnum.PENDING);
 
         const originalUpdatedAt = task.updatedAt;
         jest.useFakeTimers();
@@ -290,7 +252,7 @@ describe('Task Entity', () => {
 
         task.markAsInProgress();
 
-        expect(task.status).toBe(TaskStatus.IN_PROGRESS);
+        expect(task.status).toBe(TaskStatusEnum.IN_PROGRESS);
         expect(task.updatedAt.getTime()).toBeGreaterThan(
           originalUpdatedAt.getTime()
         );
@@ -300,7 +262,7 @@ describe('Task Entity', () => {
 
       it('should throw error when marking in-progress task as in progress', () => {
         task.markAsInProgress();
-        expect(task.status).toBe(TaskStatus.IN_PROGRESS);
+        expect(task.status).toBe(TaskStatusEnum.IN_PROGRESS);
 
         expect(() => task.markAsInProgress()).toThrow(
           'Only pending tasks can be marked as in progress'
@@ -309,7 +271,7 @@ describe('Task Entity', () => {
 
       it('should throw error when marking completed task as in progress', () => {
         task.markAsCompleted();
-        expect(task.status).toBe(TaskStatus.COMPLETED);
+        expect(task.status).toBe(TaskStatusEnum.COMPLETED);
 
         expect(() => task.markAsInProgress()).toThrow(
           'Only pending tasks can be marked as in progress'
@@ -333,7 +295,7 @@ describe('Task Entity', () => {
 
     describe('Mark as Completed', () => {
       it('should mark pending task as completed', () => {
-        expect(task.status).toBe(TaskStatus.PENDING);
+        expect(task.status).toBe(TaskStatusEnum.PENDING);
 
         const originalUpdatedAt = task.updatedAt;
         jest.useFakeTimers();
@@ -341,7 +303,7 @@ describe('Task Entity', () => {
 
         task.markAsCompleted();
 
-        expect(task.status).toBe(TaskStatus.COMPLETED);
+        expect(task.status).toBe(TaskStatusEnum.COMPLETED);
         expect(task.updatedAt.getTime()).toBeGreaterThan(
           originalUpdatedAt.getTime()
         );
@@ -351,7 +313,7 @@ describe('Task Entity', () => {
 
       it('should mark in-progress task as completed', () => {
         task.markAsInProgress();
-        expect(task.status).toBe(TaskStatus.IN_PROGRESS);
+        expect(task.status).toBe(TaskStatusEnum.IN_PROGRESS);
 
         const originalUpdatedAt = task.updatedAt;
         jest.useFakeTimers();
@@ -359,7 +321,7 @@ describe('Task Entity', () => {
 
         task.markAsCompleted();
 
-        expect(task.status).toBe(TaskStatus.COMPLETED);
+        expect(task.status).toBe(TaskStatusEnum.COMPLETED);
         expect(task.updatedAt.getTime()).toBeGreaterThan(
           originalUpdatedAt.getTime()
         );
@@ -369,7 +331,7 @@ describe('Task Entity', () => {
 
       it('should throw error when marking completed task as completed again', () => {
         task.markAsCompleted();
-        expect(task.status).toBe(TaskStatus.COMPLETED);
+        expect(task.status).toBe(TaskStatusEnum.COMPLETED);
 
         expect(() => task.markAsCompleted()).toThrow(
           'Task is already completed'
@@ -394,28 +356,28 @@ describe('Task Entity', () => {
     describe('Status Transition Scenarios', () => {
       it('should allow complete workflow: pending → in progress → completed', () => {
         // Start as pending
-        expect(task.status).toBe(TaskStatus.PENDING);
+        expect(task.status).toBe(TaskStatusEnum.PENDING);
 
         // Move to in progress
         task.markAsInProgress();
-        expect(task.status).toBe(TaskStatus.IN_PROGRESS);
+        expect(task.status).toBe(TaskStatusEnum.IN_PROGRESS);
 
         // Move to completed
         task.markAsCompleted();
-        expect(task.status).toBe(TaskStatus.COMPLETED);
+        expect(task.status).toBe(TaskStatusEnum.COMPLETED);
       });
 
       it('should allow direct transition: pending → completed', () => {
-        expect(task.status).toBe(TaskStatus.PENDING);
+        expect(task.status).toBe(TaskStatusEnum.PENDING);
 
         task.markAsCompleted();
 
-        expect(task.status).toBe(TaskStatus.COMPLETED);
+        expect(task.status).toBe(TaskStatusEnum.COMPLETED);
       });
 
       it('should not allow any transitions from completed', () => {
         task.markAsCompleted();
-        expect(task.status).toBe(TaskStatus.COMPLETED);
+        expect(task.status).toBe(TaskStatusEnum.COMPLETED);
 
         // No valid transitions from completed
         expect(() => task.markAsInProgress()).toThrow(
@@ -430,14 +392,14 @@ describe('Task Entity', () => {
 
   describe('Task Serialization', () => {
     it('should serialize to JSON correctly', () => {
-      const task = Task.create('Test Task', 'Test Description', validTaskId);
+      const task = Task.create(validTaskTitle, 'Test Description', validTaskId);
       const json = task.toJSON();
 
       expect(json).toEqual({
         id: validTaskId.toString(),
-        title: 'Test Task',
+        title: validTaskTitle.getValue(),
         description: 'Test Description',
-        status: TaskStatus.PENDING,
+        status: TaskStatusEnum.PENDING,
         createdAt: task.createdAt,
         updatedAt: task.updatedAt,
       });
@@ -445,45 +407,51 @@ describe('Task Entity', () => {
 
     it('should serialize task with all statuses correctly', () => {
       const pendingTask = Task.create(
-        'Pending Task',
+        validTaskTitle,
         'Description',
         validTaskId
       );
       const inProgressTask = Task.create(
-        'In Progress Task',
+        validTaskTitle,
         'Description',
         anotherTaskId
       );
       inProgressTask.markAsInProgress();
 
       const completedTask = Task.create(
-        'Completed Task',
+        validTaskTitle,
         'Description',
         TaskId.from(uuidv4())
       );
       completedTask.markAsCompleted();
 
-      expect(pendingTask.toJSON().status).toBe(TaskStatus.PENDING);
-      expect(inProgressTask.toJSON().status).toBe(TaskStatus.IN_PROGRESS);
-      expect(completedTask.toJSON().status).toBe(TaskStatus.COMPLETED);
+      expect(pendingTask.toJSON().status).toBe(TaskStatusEnum.PENDING);
+      expect(inProgressTask.toJSON().status).toBe(TaskStatusEnum.IN_PROGRESS);
+      expect(completedTask.toJSON().status).toBe(TaskStatusEnum.COMPLETED);
     });
 
     it('should serialize task with updated fields correctly', () => {
-      const task = Task.create('Original', 'Original Description', validTaskId);
+      const task = Task.create(
+        validTaskTitle,
+        'Original Description',
+        validTaskId
+      );
 
       // simulate a delay of 1 second
       jest.useFakeTimers();
       jest.setSystemTime(task.createdAt.getTime() + 1000);
 
-      task.updateTitle('Updated Title');
+      const newTitle = TaskTitle.create('Updated Title');
+
+      task.updateTitle(newTitle.getValue());
       task.updateDescription('Updated Description');
       task.markAsInProgress();
 
       const json = task.toJSON();
 
-      expect(json.title).toBe('Updated Title');
+      expect(json.title).toBe(newTitle.getValue());
       expect(json.description).toBe('Updated Description');
-      expect(json.status).toBe(TaskStatus.IN_PROGRESS);
+      expect(json.status).toBe(TaskStatusEnum.IN_PROGRESS);
       expect(json.updatedAt.getTime()).toBeGreaterThan(
         json.createdAt.getTime()
       );
@@ -494,7 +462,7 @@ describe('Task Entity', () => {
     let task: Task;
 
     beforeEach(() => {
-      task = Task.create('Test Task', 'Test Description', validTaskId);
+      task = Task.create(validTaskTitle, 'Test Description', validTaskId);
     });
 
     it('should not allow external modification of ID', () => {
@@ -528,20 +496,24 @@ describe('Task Entity', () => {
 
   describe('Task Business Rules', () => {
     it('should enforce title requirement throughout lifecycle', () => {
-      const task = Task.create('Valid Title', 'Description', validTaskId);
+      const task = Task.create(validTaskTitle, 'Description', validTaskId);
 
       // Should not allow empty title updates at any status
-      expect(() => task.updateTitle('')).toThrow('Title cannot be empty');
+      expect(() => task.updateTitle('')).toThrow('Title is required');
 
       task.markAsInProgress();
-      expect(() => task.updateTitle('')).toThrow('Title cannot be empty');
+      expect(() => task.updateTitle('')).toThrow('Title is required');
 
       task.markAsCompleted();
-      expect(() => task.updateTitle('')).toThrow('Title cannot be empty');
+      expect(() => task.updateTitle('')).toThrow('Title is required');
     });
 
     it('should allow description updates at any status', () => {
-      const task = Task.create('Title', 'Original Description', validTaskId);
+      const task = Task.create(
+        validTaskTitle,
+        'Original Description',
+        validTaskId
+      );
 
       task.updateDescription('Pending Description');
       expect(task.description).toBe('Pending Description');
@@ -556,7 +528,7 @@ describe('Task Entity', () => {
     });
 
     it('should maintain temporal consistency', () => {
-      const task = Task.create('Title', 'Description', validTaskId);
+      const task = Task.create(validTaskTitle, 'Description', validTaskId);
       const createdAt = task.createdAt;
 
       // updatedAt should never be before createdAt

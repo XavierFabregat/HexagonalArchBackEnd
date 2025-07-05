@@ -56,7 +56,7 @@ export class MockTaskRepository implements TaskRepository {
 
     const updatedTask = Task.fromPersistence(existingTaskFromDB);
     if (task.title) {
-      updatedTask.updateTitle(task.title);
+      updatedTask.updateTitle(task.title.getValue());
     }
     if (task.description) {
       updatedTask.updateDescription(task.description);

@@ -1,7 +1,8 @@
 import { Task } from '@domain/entities/Task';
 import { TaskRepository } from '../ports/TaskRepository';
-import { TaskId } from '../../domain/value-objects/TaskId';
+import { TaskId } from '@domain/value-objects/TaskId';
 import { IdGenerator } from '../ports/IdGenerator';
+import { TaskTitle } from '@domain/value-objects/TaskTitle';
 
 export interface CreateTaskCommand {
   title: string;
@@ -17,7 +18,7 @@ export class CreateTaskUseCase {
   async execute(command: CreateTaskCommand): Promise<Task> {
     // 1. Use domain logic to create the task
     const task = Task.create(
-      command.title,
+      TaskTitle.create(command.title),
       command.description,
       TaskId.from(this.idGenerator.generate())
     );

@@ -1,9 +1,10 @@
 import { TaskRepository } from '@application/ports/TaskRepository';
-import { Task, TaskStatus } from '@domain/entities/Task';
+import { Task } from '@domain/entities/Task';
 import { Sequelize } from 'sequelize-typescript';
 import { sequelizeConfig } from './sequelize.config';
 import { TaskId } from '@domain/value-objects/TaskId';
-import { Task as TaskModel } from './models/Task';
+import { Task as TaskModel, TaskAttributes } from './models/Task';
+import { TaskStatusEnum } from '@domain/value-objects/TaskStatus';
 
 export class SequelizeTaskRepository implements TaskRepository {
   private sequelize: Sequelize;
@@ -17,9 +18,9 @@ export class SequelizeTaskRepository implements TaskRepository {
 
   async save(task: Task): Promise<void> {
     const taskData = {
-      title: task.title,
+      title: task.title.getValue(),
       description: task.description,
-      status: task.status as TaskStatus,
+      status: task.status as TaskStatusEnum,
     };
 
     await TaskModel.create({

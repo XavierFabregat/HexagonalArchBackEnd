@@ -1,30 +1,26 @@
 import { TaskId } from '../value-objects/TaskId';
-
-export enum TaskStatus {
-  PENDING = 'pending',
-  IN_PROGRESS = 'in_progress',
-  COMPLETED = 'completed',
-}
+import { TaskStatus, TaskStatusEnum } from '../value-objects/TaskStatus';
+import { TaskTitle } from '../value-objects/TaskTitle';
 
 export class Task {
   // cannot be called with new
   private constructor(
     private readonly _id: TaskId,
-    private _title: string,
+    private _title: TaskTitle,
     private _description: string,
-    private _status: TaskStatus,
+    private _status: TaskStatusEnum,
     private _createdAt: Date,
     private _updatedAt: Date
   ) {}
 
   // this is how we create a task
-  static create(title: string, description: string, id: TaskId): Task {
-    if (!title || !description || !id) {
-      throw new Error('Title, description and id are required');
+  static create(title: TaskTitle, description: string, id: TaskId): Task {
+    if (!description) {
+      throw new Error('Description is required');
     }
 
     const now = new Date();
-    return new Task(id, title, description, TaskStatus.PENDING, now, now);
+    return new Task(id, title, description, TaskStatusEnum.PENDING, now, now);
   }
 
   // factory method for recreating a task from a database
@@ -32,13 +28,13 @@ export class Task {
     id: string;
     title: string;
     description: string;
-    status: TaskStatus;
+    status: TaskStatusEnum;
     createdAt: Date;
     updatedAt: Date;
   }): Task {
     return new Task(
       TaskId.from(data.id),
-      data.title,
+      TaskTitle.create(data.title),
       data.description,
       data.status,
       data.createdAt,
@@ -50,13 +46,13 @@ export class Task {
   get id(): TaskId {
     return this._id;
   }
-  get title(): string {
+  get title(): TaskTitle {
     return this._title;
   }
   get description(): string {
     return this._description;
   }
-  get status(): TaskStatus {
+  get status(): TaskStatusEnum {
     return this._status;
   }
   get createdAt(): Date {
@@ -68,10 +64,7 @@ export class Task {
 
   // Business logic methods
   updateTitle(title: string): void {
-    if (!title || title.trim() === '') {
-      throw new Error('Title cannot be empty');
-    }
-    this._title = title.trim();
+    this._title = TaskTitle.create(title);
     this._updatedAt = new Date();
   }
 
@@ -81,18 +74,18 @@ export class Task {
   }
 
   markAsInProgress(): void {
-    if (this._status !== TaskStatus.PENDING) {
+    if (this._status !== TaskStatusEnum.PENDING) {
       throw new Error('Only pending tasks can be marked as in progress');
     }
-    this._status = TaskStatus.IN_PROGRESS;
+    this._status = TaskStatusEnum.IN_PROGRESS;
     this._updatedAt = new Date();
   }
 
   markAsCompleted(): void {
-    if (this._status === TaskStatus.COMPLETED) {
+    if (this._status === TaskStatusEnum.COMPLETED) {
       throw new Error('Task is already completed');
     }
-    this._status = TaskStatus.COMPLETED;
+    this._status = TaskStatusEnum.COMPLETED;
     this._updatedAt = new Date();
   }
 
@@ -100,7 +93,7 @@ export class Task {
   toJSON() {
     return {
       id: this._id.toString(),
-      title: this._title,
+      title: this._title.getValue(),
       description: this._description,
       status: this._status,
       createdAt: this._createdAt,
@@ -111,7 +104,7 @@ export class Task {
   toPersistence() {
     return {
       id: this._id.toString(),
-      title: this._title,
+      title: this._title.getValue(),
       description: this._description,
       status: this._status,
     };

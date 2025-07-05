@@ -3,6 +3,7 @@ import { MockTaskRepository } from '../mocks/MockTaskRepository';
 import { MockIdGenerator } from '../mocks/MockIdGenerator';
 import { Task } from '@domain/entities/Task';
 import { TaskId } from '@domain/value-objects/TaskId';
+import { TaskTitle } from '@domain/value-objects/TaskTitle';
 
 describe('GetTaskUseCase', () => {
   let useCase: GetTaskUseCase;
@@ -15,7 +16,9 @@ describe('GetTaskUseCase', () => {
     useCase = new GetTaskUseCase(mockRepository);
     mockIdGenerator = new MockIdGenerator();
     taskId = TaskId.from(mockIdGenerator.generate());
-    mockRepository.save(Task.create('Test Task', 'Test Description', taskId));
+    mockRepository.save(
+      Task.create(TaskTitle.create('Test Task'), 'Test Description', taskId)
+    );
   });
 
   describe('Successful Task Retrieval', () => {
@@ -26,7 +29,7 @@ describe('GetTaskUseCase', () => {
       const task = await useCase.execute(command);
       expect(task).toBeDefined();
       expect(task?.id.getValue()).toBe(taskId.getValue());
-      expect(task?.title).toBe('Test Task');
+      expect(task?.title.getValue()).toBe('Test Task');
     });
   });
 
